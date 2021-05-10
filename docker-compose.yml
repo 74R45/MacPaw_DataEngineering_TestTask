@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+  app:
+    container_name: app
+    build:
+      context: ./target/docker/stage
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - flyway
+    networks:
+      - backend
+  db:
+    container_name: db
+    image: mysql:8.0.23
+    restart: always
+    expose:
+      - '3306'
+    cap_add:
+      - SYS_NICE
+    environment:
+      MYSQL_DATABASE: macpaw_test_task
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend
+  flyway:
+    container_name: flyway
+    image: flyway/flyway:latest
+    environment:
+      - FLYWAY_USER=root
+      - FLYWAY_PASSWORD=root_password
+      - FLYWAY_URL=jdbc:mysql://db:3306/macpaw_test_task
+      - FLYWAY_SCHEMAS=macpaw_test_task
+      - FLYWAY_GROUP=true
+    command: -locations=filesystem:/flyway/migrations -connectRetries=60 migrate
+    depends_on:
+      - db
+    volumes:
+      - ./flyway/migrations:/flyway/migrations
+    networks:
+      - backend
+
+volumes:
+  db-data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
