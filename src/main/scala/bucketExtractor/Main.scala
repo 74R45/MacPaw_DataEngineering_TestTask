@@ -29,7 +29,7 @@ object Main {
       if (ProcessedFileService.insertIfNotExists(filename)) {
         try {
           val json = getFileJson(filename)
-          log(s"Processing $filename...")
+          log(s"Processing $filename")
           processJson(json)
         } catch {
           case e: IOException => log(s"WARNING: ${e.getMessage} for $filename.")

@@ -6,4 +6,4 @@ For this task the preferred language was Python, and I am quite knowledgeable ab
 In order to launch this project you need to have [Docker](https://www.docker.com/products/docker-desktop) and [scala-sbt](https://www.scala-sbt.org/) installed.
 
 1.  Run `sbt docker:stage` to generate Dockerfile and compile the project.
-2.  Run `docker-compose up` and wait until the db initializes.
+2.  Run `docker-compose up` and wait until the db initializes (can take up to 5 minutes).
