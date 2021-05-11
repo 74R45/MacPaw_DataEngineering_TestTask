@@ -7,8 +7,10 @@ import io.circe._
 import io.circe.parser._
 import io.circe.generic.auto._
 
-import java.io.{BufferedReader, InputStreamReader}
+import java.io.{BufferedReader, IOException, InputStreamReader}
 import java.net.URL
+import java.util.Date
+import java.text.SimpleDateFormat
 import java.util.stream.Collectors
 import scala.collection.mutable
 
@@ -25,8 +27,13 @@ object Main {
 
     fileKeys.foreach(filename =>
       if (ProcessedFileService.insertIfNotExists(filename)) {
-        val json = getFileJson(filename)
-        processJson(json)
+        try {
+          val json = getFileJson(filename)
+          log(s"Processing $filename...")
+          processJson(json)
+        } catch {
+          case e: IOException => log(s"WARNING: ${e.getMessage} for $filename.")
+        }
       }
     )
   }
@@ -67,7 +74,6 @@ object Main {
     val parsed = parse(json).getOrElse(Json.Null)
     parsed.asArray match {
       case Some(array) =>
-        println(s"${System.currentTimeMillis()}: start")
         // Traverse the JSON, mapping each object into an Item of its type
         val results = array.map(json => {
           val c = json.hcursor
@@ -95,15 +101,22 @@ object Main {
           case m: Movie => movies += m
           case a: App => apps += a
         }
-        println(s"${System.currentTimeMillis()}: parsed")
+        log("Parsed.")
 
         // Insert the Items into the DB
         SongService.insertAll(songs)
         MovieService.insertAll(movies)
         AppService.insertAll(apps)
-        println(s"${System.currentTimeMillis()}: inserted")
+        log("Inserted.")
 
-      case None => println("Parse error: not an array")
+      case None => log("Parse error: not an array.")
     }
   }
+
+  /**
+   * Log a given message with a timestamp in console.
+   * @param message text to be logged
+   */
+  def log(message: String): Unit = println(
+    s"${new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())}  $message")
 }
